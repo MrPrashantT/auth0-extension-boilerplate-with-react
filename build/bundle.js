@@ -64,23 +64,51 @@ module.exports =
 	var Webtask  = __webpack_require__(5);
 	var app      = express();
 	var template = __webpack_require__(6);
-	var metadata   = __webpack_require__(9);
+	var metadata = __webpack_require__(9);
+	var jwt      = __webpack_require__(10);
+	var request  = __webpack_require__(11);
+
 
 	app.use(auth0({
-	  scopes: 'read:connections'
+	  scopes: 'read:users'
 	}));
 
 	app.get('/', function (req, res) {
+	  
 	  res.header("Content-Type", 'text/html');
 	  res.status(200).send(template({
 	    baseUrl: res.locals.baseUrl
 	  }));
+
 	});
 
 	// This endpoint would be called by webtask-gallery to dicover your metadata
 	app.get('/meta', function (req, res) {
 	  res.status(200).send(metadata);
 	});
+
+	app.get('/users', function(req, res){
+	  var token = req.headers.authorization.split(' ')[1];
+	  var apiEndpoint = jwt.decode(token).aud[0];
+
+	  var options = {
+	    url: apiEndpoint + 'users',
+	    headers: {
+	      'Authorization': req.headers.authorization
+	    }
+	  };
+
+	  request(options, function (error, response, body) {
+	    if (!error && response.statusCode == 200) {
+	      console.log(body);
+	      res.status(200).send(body);
+	    }
+	    console.log(response);
+
+	  });
+
+	});
+
 
 	module.exports = app;
 
@@ -114,7 +142,7 @@ module.exports =
 	var jade_mixins = {};
 	var jade_interp;
 	;var locals_for_with = (locals || {});(function (baseUrl, description) {
-	buf.push("<!DOCTYPE html><html><head><title>My Extension</title><meta charset=\"UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\"" + (jade.attr("content", '' + (description) + '', true, true)) + "><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"shortcut icon\" href=\"https://cdn.auth0.com/styleguide/2.0.1/lib/logos/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/manage/v0.3.973/css/index.min.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/styleguide/latest/index.css\"><script type=\"text/javascript\" src=\"https://code.jquery.com/jquery-2.1.4.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-0.14.0.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-dom-0.14.0.js\"></script><script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/jwt-decode-1.4.0.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/navbar-1.0.1.min.js\"></script><script type=\"text/javascript\">if (!sessionStorage.getItem(\"token\")) {\n  window.location.href = '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "/login';\n}\n</script></head><body class=\"a0-extension\"><header class=\"dashboard-header\"><nav role=\"navigation\" class=\"navbar navbar-default\"><div class=\"container\"><div class=\"navbar-header\"><h1 class=\"navbar-brand\"><a href=\"http://manage.auth0.com/\"><span>Auth0</span></a></h1></div><div id=\"navbar-collapse\" class=\"collapse navbar-collapse\"></div><script type=\"text/babel\">ReactDOM.render(\n  <Navbar baseUrl=\"" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "\"/>,\n  document.getElementById('navbar-collapse')\n);</script></div></nav></header><div class=\"container\"><div class=\"row\"><section class=\"content-page current\"><div class=\"col-xs-12\"><div class=\"row\"><div class=\"col-xs-12 content-header\"><ol class=\"breadcrumb\"><li><a href=\"http://manage.auth0.com/\">Auth0 Dashboard</a></li><li><a href=\"#\">Extensions</a></li></ol><h1>My Extension</h1></div></div><div id=\"extension\"><script type=\"text/babel\">var Extension = React.createClass({\n  render: function() {\n    return (\n      <div>\n        <div className=\"widget-title title-with-nav-bars\">\n          <ul className=\"nav nav-tabs\">\n            <li className=\"active\">\n              <a data-toggle=\"tab\" href=\"#tab1\" aria-expanded=\"true\"><span className=\"tab-title\">Tab 1</span></a>\n            </li>\n            <li>\n              <a data-toggle=\"tab\" href=\"#tab2\"><span className=\"tab-title\">Tab 2</span></a>\n            </li>\n            <li>\n              <a data-toggle=\"tab\" href=\"#tab3\"><span className=\"tab-title\">Tab 3</span></a>\n            </li>\n          </ul>\n        </div>\n        <div id=\"content-area\" className=\"tab-content\">\n          <div id=\"tab1\" className=\"tab-pane active\"></div>\n          <div id=\"tab2\" className=\"tab-pane\"></div>\n          <div id=\"tab3\" className=\"tab-pane\"></div>\n        </div>\n      </div>\n    );\n  }\n});\n\nReactDOM.render(\n  <Extension />,\n  document.getElementById('extension')\n);</script></div></div></section></div></div></body></html>");}.call(this,"baseUrl" in locals_for_with?locals_for_with.baseUrl:typeof baseUrl!=="undefined"?baseUrl:undefined,"description" in locals_for_with?locals_for_with.description:typeof description!=="undefined"?description:undefined));;return buf.join("");
+	buf.push("<!DOCTYPE html><html><head><title>Auth0 Users Usage Map</title><meta charset=\"UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\"" + (jade.attr("content", '' + (description) + '', true, true)) + "><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"shortcut icon\" href=\"https://cdn.auth0.com/styleguide/2.0.1/lib/logos/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/manage/v0.3.973/css/index.min.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/styleguide/3.1.6/index.css\"><script type=\"text/javascript\" src=\"https://code.jquery.com/jquery-2.1.4.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-0.14.0.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-dom-0.14.0.js\"></script><script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/jwt-decode-1.4.0.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/navbar-1.0.1.min.js\"></script><script type=\"text/javascript\">if (!sessionStorage.getItem(\"token\")) {\n  window.location.href = '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "/login';\n} \n\n$.ajax({\n  url: '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "' + '/users',\n  type: 'GET',\n  headers: {\n    'Authorization': 'Bearer ' + sessionStorage.getItem(\"token\")\n  }}).done(\n    function(data) {\n      alert('got users!' + data);\n  });\n\n</script></head><body class=\"a0-extension\"><header class=\"dashboard-header\"><nav role=\"navigation\" class=\"navbar navbar-default\"><div class=\"container\"><div class=\"navbar-header\"><h1 class=\"navbar-brand\"><a href=\"http://manage.auth0.com/\"><span>Auth0</span></a></h1></div><div id=\"navbar-collapse\" class=\"collapse navbar-collapse\"></div><script type=\"text/babel\">ReactDOM.render(\n  <Navbar baseUrl=\"" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "\"/>,\n  document.getElementById('navbar-collapse')\n);</script></div></nav></header><div class=\"container\"><div class=\"row\"><section class=\"content-page current\"><div class=\"col-xs-12\"><div class=\"row\"><div class=\"col-xs-12 content-header\"><ol class=\"breadcrumb\"><li><a href=\"http://manage.auth0.com/\">Auth0 Dashboard</a></li><li><a href=\"#\">Extensions</a></li></ol><h1>My Extension</h1></div></div><div id=\"extension\"><script type=\"text/babel\">var Extension = React.createClass({\n  render: function() {\n    return (\n      <div>\n        <div className=\"widget-title title-with-nav-bars\">\n          <ul className=\"nav nav-tabs\">\n            <li className=\"active\">\n              <a data-toggle=\"tab\" href=\"#tab1\" aria-expanded=\"true\"><span className=\"tab-title\">Tab 1</span></a>\n            </li>\n            <li>\n              <a data-toggle=\"tab\" href=\"#tab2\"><span className=\"tab-title\">Tab 2</span></a>\n            </li>\n            <li>\n              <a data-toggle=\"tab\" href=\"#tab3\"><span className=\"tab-title\">Tab 3</span></a>\n            </li>\n          </ul>\n        </div>\n        <div id=\"content-area\" className=\"tab-content\">\n          <div id=\"tab1\" className=\"tab-pane active\"></div>\n          <div id=\"tab2\" className=\"tab-pane\"></div>\n          <div id=\"tab3\" className=\"tab-pane\"></div>\n        </div>\n      </div>\n    );\n  }\n});\n\nReactDOM.render(\n  <Extension />,\n  document.getElementById('extension')\n);</script></div></div></section></div></div></body></html>");}.call(this,"baseUrl" in locals_for_with?locals_for_with.baseUrl:typeof baseUrl!=="undefined"?baseUrl:undefined,"description" in locals_for_with?locals_for_with.description:typeof description!=="undefined"?description:undefined));;return buf.join("");
 	}
 
 /***/ },
@@ -392,6 +420,18 @@ module.exports =
 			"extension"
 		]
 	};
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	module.exports = require("jsonwebtoken");
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	module.exports = require("request");
 
 /***/ }
 /******/ ]);

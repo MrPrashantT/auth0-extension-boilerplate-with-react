@@ -24,7 +24,18 @@ html
     script(type='text/javascript').
       if (!sessionStorage.getItem("token")) {
         window.location.href = '#{baseUrl}/login';
-      }
+      } 
+
+      $.ajax({
+        url: '#{baseUrl}' + '/users',
+        type: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + sessionStorage.getItem("token")
+        }}).done(
+          function(data) {
+            alert('got users!' + data);
+        });
+
 
   body.a0-extension
     header.dashboard-header
