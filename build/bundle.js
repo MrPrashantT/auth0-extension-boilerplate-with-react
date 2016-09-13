@@ -67,7 +67,11 @@ module.exports =
 	var metadata = __webpack_require__(9);
 	var jwt      = __webpack_require__(10);
 	var request  = __webpack_require__(11);
+	var rp       = __webpack_require__(12);
+	var _        = __webpack_require__(13);
 
+
+	var ipTraceEndpoint = 'http://freegeoip.net/json/';
 
 	app.use(auth0({
 	  scopes: 'read:users'
@@ -89,10 +93,11 @@ module.exports =
 
 	app.get('/users', function(req, res){
 	  var token = req.headers.authorization.split(' ')[1];
-	  var apiEndpoint = jwt.decode(token).aud[0];
+	  var getUsersEndpoint = jwt.decode(token).aud[0] + 'users';
+	  var users; 
 
 	  var options = {
-	    url: apiEndpoint + 'users',
+	    url: getUsersEndpoint,
 	    headers: {
 	      'Authorization': req.headers.authorization
 	    }
@@ -100,13 +105,33 @@ module.exports =
 
 	  request(options, function (error, response, body) {
 	    if (!error && response.statusCode == 200) {
-	      console.log(body);
-	      res.status(200).send(body);
+	      var users = JSON.parse(response.body);
+	      console.log('----- first user: ------- ', _.first(users));
+
+	      var usersResponse = [];
+
+	      var returnUsers = _.after(users.length, function(){
+	        res.status(200).send(usersResponse);
+	      });
+
+	      _.each(users, function(user){
+	          var ipLocationEndpoint = ipTraceEndpoint + user.last_ip;
+
+	          request(ipLocationEndpoint, function(error, response, body){
+	            if(error || response.statusCode !== 200){ 
+	              console.log("ERROR: ", error);
+	            } else {
+	              user.location = JSON.parse(response.body);
+	              usersResponse.push(user);
+	            }
+	            
+	            returnUsers();
+
+	          });
+	      });
+
 	    }
-	    console.log(response);
-
 	  });
-
 	});
 
 
@@ -142,7 +167,7 @@ module.exports =
 	var jade_mixins = {};
 	var jade_interp;
 	;var locals_for_with = (locals || {});(function (baseUrl, description) {
-	buf.push("<!DOCTYPE html><html><head><title>Auth0 Users Usage Map</title><meta charset=\"UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\"" + (jade.attr("content", '' + (description) + '', true, true)) + "><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"shortcut icon\" href=\"https://cdn.auth0.com/styleguide/2.0.1/lib/logos/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/manage/v0.3.973/css/index.min.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/styleguide/3.1.6/index.css\"><script type=\"text/javascript\" src=\"https://code.jquery.com/jquery-2.1.4.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-0.14.0.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-dom-0.14.0.js\"></script><script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/jwt-decode-1.4.0.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/navbar-1.0.1.min.js\"></script><script type=\"text/javascript\">if (!sessionStorage.getItem(\"token\")) {\n  window.location.href = '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "/login';\n} \n\n$.ajax({\n  url: '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "' + '/users',\n  type: 'GET',\n  headers: {\n    'Authorization': 'Bearer ' + sessionStorage.getItem(\"token\")\n  }}).done(\n    function(data) {\n      alert('got users!' + data);\n  });\n\n</script></head><body class=\"a0-extension\"><header class=\"dashboard-header\"><nav role=\"navigation\" class=\"navbar navbar-default\"><div class=\"container\"><div class=\"navbar-header\"><h1 class=\"navbar-brand\"><a href=\"http://manage.auth0.com/\"><span>Auth0</span></a></h1></div><div id=\"navbar-collapse\" class=\"collapse navbar-collapse\"></div><script type=\"text/babel\">ReactDOM.render(\n  <Navbar baseUrl=\"" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "\"/>,\n  document.getElementById('navbar-collapse')\n);</script></div></nav></header><div class=\"container\"><div class=\"row\"><section class=\"content-page current\"><div class=\"col-xs-12\"><div class=\"row\"><div class=\"col-xs-12 content-header\"><ol class=\"breadcrumb\"><li><a href=\"http://manage.auth0.com/\">Auth0 Dashboard</a></li><li><a href=\"#\">Extensions</a></li></ol><h1>My Extension</h1></div></div><div id=\"extension\"><script type=\"text/babel\">var Extension = React.createClass({\n  render: function() {\n    return (\n      <div>\n        <div className=\"widget-title title-with-nav-bars\">\n          <ul className=\"nav nav-tabs\">\n            <li className=\"active\">\n              <a data-toggle=\"tab\" href=\"#tab1\" aria-expanded=\"true\"><span className=\"tab-title\">Tab 1</span></a>\n            </li>\n            <li>\n              <a data-toggle=\"tab\" href=\"#tab2\"><span className=\"tab-title\">Tab 2</span></a>\n            </li>\n            <li>\n              <a data-toggle=\"tab\" href=\"#tab3\"><span className=\"tab-title\">Tab 3</span></a>\n            </li>\n          </ul>\n        </div>\n        <div id=\"content-area\" className=\"tab-content\">\n          <div id=\"tab1\" className=\"tab-pane active\"></div>\n          <div id=\"tab2\" className=\"tab-pane\"></div>\n          <div id=\"tab3\" className=\"tab-pane\"></div>\n        </div>\n      </div>\n    );\n  }\n});\n\nReactDOM.render(\n  <Extension />,\n  document.getElementById('extension')\n);</script></div></div></section></div></div></body></html>");}.call(this,"baseUrl" in locals_for_with?locals_for_with.baseUrl:typeof baseUrl!=="undefined"?baseUrl:undefined,"description" in locals_for_with?locals_for_with.description:typeof description!=="undefined"?description:undefined));;return buf.join("");
+	buf.push("<!DOCTYPE html><html><head><title>Auth0 Users Usage Map</title><meta charset=\"UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\"" + (jade.attr("content", '' + (description) + '', true, true)) + "><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"shortcut icon\" href=\"https://cdn.auth0.com/styleguide/2.0.1/lib/logos/img/favicon.png\"><link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/manage/v0.3.973/css/index.min.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.auth0.com/styleguide/3.1.6/index.css\"><style>#map {\n  height: 100%;\n}\n\n#tab1 {\n  height: 500px;\n}\n</style><script type=\"text/javascript\" src=\"https://code.jquery.com/jquery-2.1.4.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-0.14.0.min.js\"></script><script type=\"text/javascript\" src=\"https://fb.me/react-dom-0.14.0.js\"></script><script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/jwt-decode-1.4.0.min.js\"></script><script type=\"text/javascript\" src=\"https://cdn.auth0.com/js/navbar-1.0.1.min.js\"></script><script type=\"text/javascript\" src=\"https://maps.googleapis.com/maps/api/js?key=AIzaSyCHWxwbBN2zdbqZp558vF6nM3Cs3lY5gWM&amp;callback=initMap\" async defer></script><script type=\"text/javascript\" src=\"https://fastcdn.org/Underscore.js/1.8.3/underscore-min.js\"></script><script type=\"text/javascript\">var map;\nfunction initMap() {\n    map = new google.maps.Map(document.getElementById('map'), {\n    center: {lat: 0, lng: 0},\n    zoom: 1\n    });\n }\n </script><script type=\"text/javascript\">if (!sessionStorage.getItem(\"token\")) {\n  window.location.href = '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "/login';\n} \n\n$.ajax({\n  url: '" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "' + '/users',\n  type: 'GET',\n  headers: {\n    'Authorization': 'Bearer ' + sessionStorage.getItem(\"token\")\n  }}).done(\n    function(data) {\n      alert('got users!' + data);\n\n      _.each(data, function(user){\n        var myLatLng = {lat: user.location.latitude, lng: user.location.longitude };\n        console.log(user);\n        console.log(myLatLng);\n        var marker = new google.maps.Marker({\n          position: myLatLng,\n          map: map,\n          title: 'User'\n        });\n      });\n\n\n  });\n\n</script></head><body class=\"a0-extension\"><header class=\"dashboard-header\"><nav role=\"navigation\" class=\"navbar navbar-default\"><div class=\"container\"><div class=\"navbar-header\"><h1 class=\"navbar-brand\"><a href=\"http://manage.auth0.com/\"><span>Auth0</span></a></h1></div><div id=\"navbar-collapse\" class=\"collapse navbar-collapse\"></div><script type=\"text/babel\">ReactDOM.render(\n  <Navbar baseUrl=\"" + (jade.escape((jade_interp = baseUrl) == null ? '' : jade_interp)) + "\"/>,\n  document.getElementById('navbar-collapse')\n);</script></div></nav></header><div class=\"container\"><div class=\"row\"><section class=\"content-page current\"><div class=\"col-xs-12\"><div class=\"row\"><div class=\"col-xs-12 content-header\"><ol class=\"breadcrumb\"><li><a href=\"http://manage.auth0.com/\">Auth0 Dashboard</a></li><li><a href=\"#\">Extensions</a></li></ol><h1>Users Map</h1></div></div><div id=\"extension\"><script type=\"text/babel\">var Extension = React.createClass({\n  render: function() {\n    return (\n      <div>\n        <div id=\"content-area\" className=\"tab-content\">\n          <div id=\"tab1\" className=\"tab-pane active\">\n            <div id=\"map\"></div>\n          </div>\n\n        </div>\n      </div>\n    );\n  }\n});\n\nReactDOM.render(\n  <Extension />,\n  document.getElementById('extension')\n);</script></div></div></section></div></div></body></html>");}.call(this,"baseUrl" in locals_for_with?locals_for_with.baseUrl:typeof baseUrl!=="undefined"?baseUrl:undefined,"description" in locals_for_with?locals_for_with.description:typeof description!=="undefined"?description:undefined));;return buf.join("");
 	}
 
 /***/ },
@@ -432,6 +457,18 @@ module.exports =
 /***/ function(module, exports) {
 
 	module.exports = require("request");
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	module.exports = require("request-promise");
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	module.exports = require("underscore");
 
 /***/ }
 /******/ ]);

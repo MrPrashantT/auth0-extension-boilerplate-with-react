@@ -13,6 +13,14 @@ html
 
     link(rel='stylesheet', type='text/css', href='https://cdn.auth0.com/manage/v0.3.973/css/index.min.css')
     link(rel='stylesheet', type='text/css', href="https://cdn.auth0.com/styleguide/3.1.6/index.css")
+    style.
+      #map {
+        height: 100%;
+      }
+
+      #tab1 {
+        height: 500px;
+      }
 
     script(type='text/javascript', src='https://code.jquery.com/jquery-2.1.4.min.js')
     script(type='text/javascript', src='https://fb.me/react-0.14.0.min.js')
@@ -20,7 +28,18 @@ html
     script(type='text/javascript', src='https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js')
     script(type='text/javascript', src='https://cdn.auth0.com/js/jwt-decode-1.4.0.min.js')
     script(type='text/javascript', src='https://cdn.auth0.com/js/navbar-1.0.1.min.js')
+    script(type='text/javascript', src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHWxwbBN2zdbqZp558vF6nM3Cs3lY5gWM&callback=initMap" async defer)
+    script(type='text/javascript', src="https://fastcdn.org/Underscore.js/1.8.3/underscore-min.js")
 
+    script(type='text/javascript').
+      var map;
+      function initMap() {
+          map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 0, lng: 0},
+          zoom: 1
+          });
+       }
+       
     script(type='text/javascript').
       if (!sessionStorage.getItem("token")) {
         window.location.href = '#{baseUrl}/login';
@@ -34,6 +53,19 @@ html
         }}).done(
           function(data) {
             alert('got users!' + data);
+
+            _.each(data, function(user){
+              var myLatLng = {lat: user.location.latitude, lng: user.location.longitude };
+              console.log(user);
+              console.log(myLatLng);
+              var marker = new google.maps.Marker({
+                position: myLatLng,
+                map: map,
+                title: 'User'
+              });
+            });
+
+
         });
 
 
@@ -62,7 +94,7 @@ html
                     a(href='http://manage.auth0.com/') Auth0 Dashboard
                   li
                     a(href='#') Extensions
-                h1 My Extension
+                h1 Users Map
 
             #extension
               block content

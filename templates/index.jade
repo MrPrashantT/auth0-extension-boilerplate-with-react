@@ -4,28 +4,17 @@ block title
   title Auth0 Users Usage Map
 
 block content
+
   script(type='text/babel').
     var Extension = React.createClass({
       render: function() {
         return (
           <div>
-            <div className="widget-title title-with-nav-bars">
-              <ul className="nav nav-tabs">
-                <li className="active">
-                  <a data-toggle="tab" href="#tab1" aria-expanded="true"><span className="tab-title">Tab 1</span></a>
-                </li>
-                <li>
-                  <a data-toggle="tab" href="#tab2"><span className="tab-title">Tab 2</span></a>
-                </li>
-                <li>
-                  <a data-toggle="tab" href="#tab3"><span className="tab-title">Tab 3</span></a>
-                </li>
-              </ul>
-            </div>
             <div id="content-area" className="tab-content">
-              <div id="tab1" className="tab-pane active"></div>
-              <div id="tab2" className="tab-pane"></div>
-              <div id="tab3" className="tab-pane"></div>
+              <div id="tab1" className="tab-pane active">
+                <div id="map"></div>
+              </div>
+
             </div>
           </div>
         );
@@ -36,3 +25,5 @@ block content
       <Extension />,
       document.getElementById('extension')
     );
+
+  
