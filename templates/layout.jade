@@ -52,19 +52,19 @@ html
           'Authorization': 'Bearer ' + sessionStorage.getItem("token")
         }}).done(
           function(data) {
-            alert('got users!' + data);
 
             _.each(data, function(user){
-              var myLatLng = {lat: user.location.latitude, lng: user.location.longitude };
-              console.log(user);
-              console.log(myLatLng);
-              var marker = new google.maps.Marker({
-                position: myLatLng,
-                map: map,
-                title: 'User'
-              });
+              if(user.user_metadata && user.user_metadata.geoip){ //only try plotting users with geoip metadata
+                var myLatLng = {lat: user.user_metadata.geoip.latitude, lng: user.user_metadata.geoip.longitude };
+                console.log(user);
+                console.log(myLatLng);
+                var marker = new google.maps.Marker({
+                  position: myLatLng,
+                  map: map,
+                  title: user.name
+                });
+              }
             });
-
 
         });
 

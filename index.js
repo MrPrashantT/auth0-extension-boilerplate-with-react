@@ -44,30 +44,31 @@ app.get('/users', function(req, res){
 
   request(options, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      var users = JSON.parse(response.body);
-      console.log('----- first user: ------- ', _.first(users));
 
-      var usersResponse = [];
+      res.status(200).send(JSON.parse(response.body))
 
-      var returnUsers = _.after(users.length, function(){
-        res.status(200).send(usersResponse);
-      });
+      ////////////// THIS IS CODE THAT WAS BAD AND INEFFICIENT AF/////////////////////
+      //var users = JSON.parse(response.body);
+      //var usersResponse = [];
+      // var returnUsers = _.after(users.length, function(){
+      //   res.status(200).send(usersResponse);
+      // });
 
-      _.each(users, function(user){
-          var ipLocationEndpoint = ipTraceEndpoint + user.last_ip;
+      // _.each(users, function(user){
+      //     var ipLocationEndpoint = ipTraceEndpoint + user.last_ip;
 
-          request(ipLocationEndpoint, function(error, response, body){
-            if(error || response.statusCode !== 200){ 
-              console.log("ERROR: ", error);
-            } else {
-              user.location = JSON.parse(response.body);
-              usersResponse.push(user);
-            }
+      //     request(ipLocationEndpoint, function(error, response, body){
+      //       if(error || response.statusCode !== 200){ 
+      //         console.log("ERROR: ", error);
+      //       } else {
+      //         user.location = JSON.parse(response.body);
+      //         usersResponse.push(user);
+      //       }
             
-            returnUsers();
+      //       returnUsers();
 
-          });
-      });
+      //     });
+      // });
 
     }
   });
